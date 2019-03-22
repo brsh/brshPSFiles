@@ -34,7 +34,7 @@ function New-psfModule {
 	Description of the module
 
 	.PARAMETER Abbreviate
-	Tells the function to abbreviate the Capital Letters into Function names (so in MyBronto module, will create Get-mbHelp vs Get-Help)
+	Tells the function to abbreviate the Capital Letters into Function names (so in MyBronto module, will create Get-mbHelp vs Get-MybrontoHelp)
 
 	.PARAMETER License
 	Sets a license for the project (defaults to MIT, but Apachev2, GNUv3, and Public Domain are supported)
@@ -53,7 +53,6 @@ function New-psfModule {
 	param (
 		[Parameter(Mandatory = $true)]
 		[string]$Name,
-
 		[ValidateScript( {
 				If (Test-Path -Path $_ -PathType Container) {
 					$true
@@ -84,19 +83,19 @@ function New-psfModule {
 		Write-Status -Message "Created $($root.FullName)" -Type 'Good' -Level 1
 
 		Write-Status -Message "Creating Private..." -Type 'Info' -Level 0
-		$ret = New-Item -Path $Path\$Name -Name "private" -ItemType Directory
+		$ret = New-Item -Path $Path\$Name -Name "private" -ItemType Directory -ErrorAction Stop
 		Write-Status -Message "Created $($ret.FullName)" -Type 'Good' -Level 1
 
 		Write-Status -Message "Creating Public..." -Type 'Info' -Level 0
-		$ret = New-Item -Path $Path\$Name -Name "public" -ItemType Directory
+		$ret = New-Item -Path $Path\$Name -Name "public" -ItemType Directory -ErrorAction Stop
 		Write-Status -Message "Created $($ret.FullName)" -Type 'Good' -Level 1
 
 		Write-Status -Message "Creating Config..." -Type 'Info' -Level 0
-		$ret = New-Item -Path $Path\$Name -Name "config" -ItemType Directory
+		$ret = New-Item -Path $Path\$Name -Name "config" -ItemType Directory -ErrorAction Stop
 		Write-Status -Message "Created $($ret.FullName)" -Type 'Good' -Level 1
 
 		Write-Status -Message "Creating Formats..." -Type 'Info' -Level 0
-		$ret = New-Item -Path $Path\$Name -Name "formats" -ItemType Directory
+		$ret = New-Item -Path $Path\$Name -Name "formats" -ItemType Directory -ErrorAction Stop
 		Write-Status -Message "Created $($ret.FullName)" -Type 'Good' -Level 1
 	} Catch {
 		Write-Status -Message "Could not create the directory structure." -Type "Error" -Level 1 -e $_
@@ -111,7 +110,7 @@ function New-psfModule {
 	#PSM File
 	Try {
 		write-Status -Message 'Creating Module File...' -Type 'Info' -Level 0
-		(Get-PSMModule -Name $Name -Description $Description) | Out-File -FilePath "$Path\$Name\$Name.psm1" -Encoding utf8 -NoClobber
+		(Get-PSMModule -Name $Name -Description $Description) | Out-File -FilePath "$Path\$Name\$Name.psm1" -Encoding utf8 -NoClobber -ErrorAction Stop
 		write-Status -Message 'Sucess' -Type 'Good' -Level 1
 	} Catch {
 		Write-Status -Message "Could not create the Module file." -Type "Error" -Level 1 -e $_
@@ -121,7 +120,7 @@ function New-psfModule {
 	#Readme
 	Try {
 		write-Status -Message 'Creating Readme File...' -Type 'Info' -Level 0
-		(Get-PSMReadme -Name $Name -Description $Description) | Out-File -FilePath "$Path\$Name\readme.md" -Encoding utf8 -NoClobber
+		(Get-PSMReadme -Name $Name -Description $Description) | Out-File -FilePath "$Path\$Name\readme.md" -Encoding utf8 -NoClobber -ErrorAction Stop
 		write-Status -Message 'Sucess' -Type 'Good' -Level 1
 	} Catch {
 		Write-Status -Message "Could not create the Readme file." -Type "Error" -Level 1 -e $_
@@ -131,7 +130,7 @@ function New-psfModule {
 	#Information File / Get-Help
 	Try {
 		write-Status -Message 'Creating Help/Information File...' -Type 'Info' -Level 0
-		(Get-HelpFunction -Name $Name -NickName $NickName) | Out-File -FilePath "$Path\$Name\public\Information.ps1" -Encoding utf8 -NoClobber
+		(Get-HelpFunction -Name $Name -NickName $NickName) | Out-File -FilePath "$Path\$Name\public\Information.ps1" -Encoding utf8 -NoClobber -ErrorAction Stop
 		Write-Status -Message 'Success' -Type 'Good' -Level 1
 	} Catch {
 		Write-Status -Message 'Could not add skeleton help content to file.' -Type "Error" -Level 1 -e $_
@@ -141,7 +140,7 @@ function New-psfModule {
 	#Write-Status File
 	Try {
 		write-Status -Message 'Creating Write-Status.ps1 File...' -Type 'Info' -Level 0
-		Copy-Item $script:scriptpath\private\Write-Status.ps1 $root\private\Write-Status.ps1
+		Copy-Item $script:scriptpath\private\Write-Status.ps1 $root\private\Write-Status.ps1 -ErrorAction Stop
 		Write-Status -Message 'Success' -Type 'Good' -Level 1
 	} Catch {
 		Write-Status -Message 'Could not add Write-Status.ps1 file.' -Type "Error" -Level 1 -e $_
@@ -150,7 +149,7 @@ function New-psfModule {
 
 	#License / Copyright
 	Write-Status -Message "Establishing Copyright: $($License.ToUpper())..." -Type 'Info' -Level 0
-	[string] $Copyright = Get-LicenseText -License $license -Author $Author
+	[string] $Copyright = Get-LicenseText -License $license -Author $Author -ErrorAction Stop
 	if ($Copyright.Length -gt 0) {
 		Write-Status 'Success' -Type 'Good' -Level 1
 	}
@@ -171,9 +170,7 @@ function New-psfModule {
 			VariablesToExport = $null
 			CmdletsToExport   = $null
 		}
-		New-ModuleManifest @Splat
-		# New-ModuleManifest -Path "$Path\$Name\$Name.psd1" -RootModule $Name -Author $Author -Description $Description -PowerShellVersion $MinimumVersion `
-		# 	-AliasesToExport $null -FunctionsToExport $null -VariablesToExport $null -CmdletsToExport $null -Copyright $Copyright
+		New-ModuleManifest @Splat -ErrorAction Stop
 		Write-Status -Message 'Success' -Type 'Good' -Level 1
 	} Catch {
 		Write-Status -Message 'Could not create the manifest.' -Type "Error" -Level 1 -e $_
