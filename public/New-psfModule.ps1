@@ -64,6 +64,7 @@ function New-psfModule {
 		[Parameter(Mandatory = $false)]
 		[string]$Author,
 		[Parameter(Mandatory = $true)]
+		[Alias('Synopsis')]
 		[string]$Description,
 		[Parameter(Mandatory = $false)]
 		[switch] $Abbreviate = $false,

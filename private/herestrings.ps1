@@ -113,3 +113,59 @@ This is some text to describe what this is and what it does. Prolly want some in
 
 "@
 }
+
+function Get-ScriptInfo {
+	param (
+		[string] $License = 'MIT',
+		[string] $Synopsis,
+		[string] $Name,
+		[string] $Author
+	)
+	@"
+
+<#PSScriptInfo
+.VERSION 1.0
+.GUID $(New-GUID)
+.AUTHOR $Author
+.COMPANYNAME
+.COPYRIGHT $(Get-LicenseText -License $License -Author $Author)
+.TAGS
+.LICENSEURI
+.PROJECTURI
+.ICONURI
+.EXTERNALMODULEDEPENDENCIES
+.REQUIREDSCRIPTS
+.EXTERNALSCRIPTDEPENDENCIES
+.RELEASENOTES
+#>
+
+<#
+.SYNOPSIS
+$Synopsis
+
+.DESCRIPTION
+Lots of text goes here to explain all the things.
+
+.PARAMETER Name
+Parameter Description
+
+.EXAMPLE
+$Name -Name ThisIsAName
+
+#>
+
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory=`$true,ValueFromPipeline=`$true,HelpMessage=`"This should be helpful`")]
+    [Alias('Brand', 'Label', 'Term', 'Alias', 'Designation')]
+    [string] `$Name
+)
+
+BEGIN { }
+
+PROCESS { }
+
+END { }
+
+"@
+}
