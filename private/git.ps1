@@ -6,6 +6,15 @@ function Initialize-GitRepo {
 		[string] $GitRemoteRepoURI = ''
 	)
 	Write-Status -Message 'Attempting to initialize Git repository' -Type 'Info' -Level 0
+	#.GitIngnore File
+	Try {
+		write-Status -Message 'Creating .gitignore...' -Type 'Info' -Level 1
+		Copy-Item $script:scriptpath\Config\gitignore.txt "$root\.gitignore" -ErrorAction Stop
+		Write-Status -Message 'Success' -Type 'Good' -Level 2
+	} Catch {
+		Write-Status -Message 'Could not add .gitignore file.' -Type "Error" -Level 2 -e $_
+		return
+	}
 	try {
 		$response = (git.exe init $root.FullName *>&1)
 		Write-Status -Message $response -Type 'Info' -Level 1
