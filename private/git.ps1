@@ -1,7 +1,9 @@
 function Initialize-GitRepo {
 	param (
 		[System.IO.DirectoryInfo] $root,
-		[switch] $InitialCommit = $false
+		[switch] $InitialCommit = $false,
+		[Parameter(Mandatory = $false)]
+		[string] $GitRemoteRepoURI = ''
 	)
 	Write-Status -Message 'Attempting to initialize Git repository' -Type 'Info' -Level 0
 	try {
@@ -22,8 +24,15 @@ function Initialize-GitRepo {
 			Write-Status -Message 'Committing...' -Type 'Info' -Level 2
 			$response = (git commit -m 'Initial Commit' *>&1)
 			#Write-Status -Message (($response) -split '`r') -Type 'Info' -Level 3
-			Set-Location $currdir
 			Write-Status -Message 'Initial commit successful' -Type 'Good' -Level 1
+			if ($GitRemoteRepoURI.Length -gt 0) {
+				#Yeah, haven't tested this and don't think I will quite yet :)
+				Write-Status -Message 'Attempting to push to remote origin...' -Type 'Info' -Level 1
+				$response = (git remote add origin $GitRemoteRepoURI *>&1)
+				$response = (git push -u origin master *>&1)
+				Write-Status -Message $response -Type 'Warning' -Level 2
+			}
+			Set-Location $currdir
 		} catch {
 			Write-Status -Message "Could not perform initial commit." -Type "Error" -Level 2 -e $_
 		}
