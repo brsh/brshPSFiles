@@ -112,7 +112,7 @@ function New-psfModule {
 	#PSM File
 	Try {
 		write-Status -Message 'Creating Module File...' -Type 'Info' -Level 0
-		(Get-PSMModule -Name $Name -Description $Description) | Out-File -FilePath "$Path\$Name\$Name.psm1" -Encoding utf8 -NoClobber -ErrorAction Stop
+		(Get-PSMModule -Name $Name -NickName $NickName) | Out-File -FilePath "$Path\$Name\$Name.psm1" -Encoding utf8 -NoClobber -ErrorAction Stop
 		write-Status -Message 'Success' -Type 'Good' -Level 1
 	} Catch {
 		Write-Status -Message "Could not create the Module file." -Type "Error" -Level 1 -e $_
