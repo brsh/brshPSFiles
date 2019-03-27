@@ -55,6 +55,9 @@ param (
 # Current script path
 [string] `$script:ScriptPath = Split-Path (Get-Variable MyInvocation -scope script).value.MyCommand.Definition -Parent
 [string[]] `$script:ShowHelp = @()
+# if (`$PSVersionTable.PSVersion.Major -lt 6) {
+# 	[bool] `$IsLinux = `$false
+# }
 #endregion Default Private Variables
 
 #region Load Private Helpers
@@ -73,8 +76,12 @@ Get-ChildItem `$ScriptPath/public -Recurse -Filter "*.ps1" -File | ForEach-Objec
 	# Find all the functions defined no deeper than the first level deep and export it.
 	# This looks ugly but allows us to not keep any unneeded variables from polluting the module.
 	([System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Path `$_.FullName -Raw), [ref] `$null, [ref] `$null)).FindAll( { `$args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, `$false) | ForEach-Object {
+		#if ((`$IsLinux) -and (`$_.Name -match 'SomethingThatMatches')) {
+		#	#This Function is not available in Linux
+		#} else {
 		Export-ModuleMember `$_.Name
 		`$ShowHelp += `$_.Name
+		#}
 	}
 }
 #endregion Load Public Helpers
