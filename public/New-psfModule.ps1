@@ -16,6 +16,7 @@ function New-psfModule {
 		* Root/*.psd1 - the Module Definition file
 		* Root/readme.md - the base readme markdown file
 		* Root/licenst.txt - the license file (if any; default is MIT)
+		* Root/.gitignore - win/mac/msoffice/etc files/folders for git to ignore by default
 		* Root/Public/Information.ps1 - the Get-Help function
 		* Root/Private/Write-Status.ps1 - a Write-Host wrapper
 
