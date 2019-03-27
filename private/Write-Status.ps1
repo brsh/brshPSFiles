@@ -136,21 +136,3 @@ function Set-WordWrap {
 	}
 }
 
-function Write-ErrorMessage {
-	param (
-		[string] $Message,
-		[System.Management.Automation.ErrorRecord] $e,
-		[int] $Level = 0
-	)
-	#[string] $Space = Get-Indent -Level $Level
-	#$e.gettype()
-
-	Write-Status -Message $Message -Type 'Error' -Level $Level
-	if ($e) {
-		Write-Status -Message (($e.InvocationInfo.PositionMessage -split "`n")[0]) -Type 'Error' -Level ($Level + 1)
-		[string[]] $wrapped = Set-WordWrap -Message $e.Exception.Message -Level ($Level + 1)
-		$wrapped | ForEach-Object {
-			Write-Status -Message $_ -Type 'Warning' -Level ($Level + 1)
-		}
-	}
-}

@@ -19,7 +19,7 @@ Specifies the author
 Description of the module
 
 .PARAMETER NewFolder
-Creates a separate folder for the script (this is the only way for this functon to initialize a git repo)
+Creates a separate folder for the script (this is the only way for this function to initialize a git repo)
 
 .PARAMETER License
 Sets a license for the project (defaults to MIT, but Apachev2, GNUv3, and Public Domain are supported)
@@ -98,7 +98,7 @@ New-psfScript -Name "Brontosaurus.ps1" -Path "C:\Scripts" -Synopsis 'A script ab
 		Write-Status -Message 'Creating Script File...' -Type 'Info' -Level 0
 		Write-Status -Message 'FileName', "$($root.FullName)\$Name" -Type 'Info', 'InfoHigh' -Level 1
 		(Get-ScriptInfo -License $License -Synopsis $Synopsis -Name $Name -Author $Author) | Out-File -FilePath "$($root.FullName)\$Name" -Encoding utf8 -NoClobber	-ErrorAction Stop
-		write-Status -Message 'Sucess' -Type 'Good' -Level 1
+		write-Status -Message 'Success' -Type 'Good' -Level 1
 	} Catch {
 		Write-Status -Message "Unable to create file in the path specified." -Type 'Error' -Level 1 -e $_
 		return

@@ -13,13 +13,13 @@
 	Write-Host "Getting available functions..." -ForegroundColor Yellow
 
 	$all = @()
-	$list = Get-Command -Type function -Module "brshPSFiles" | Where-Object { $_.Name -in $script:showhelp}
+	$list = Get-Command -Type function -Module "brshPSFiles" | Where-Object { $_.Name -in $script:ShowHelp}
 	$list | ForEach-Object {
-        if ($PSVersionTable.PSVersion.Major -lt 6) {
+		if ($PSVersionTable.PSVersion.Major -lt 6) {
 			$RetHelp = Get-Help $_.Name -ShowWindow:$false -ErrorAction SilentlyContinue
-        } else {
-            $RetHelp = Get-Help $_.Name -ErrorAction SilentlyContinue
-        }
+		} else {
+			$RetHelp = Get-Help $_.Name -ErrorAction SilentlyContinue
+		}
 		if ($RetHelp.Description) {
 			$Infohash = @{
 				Command     = $_.Name

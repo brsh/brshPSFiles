@@ -6,7 +6,7 @@ function Initialize-GitRepo {
 		[string] $GitRemoteRepoURI = ''
 	)
 	Write-Status -Message 'Attempting to initialize Git repository' -Type 'Info' -Level 0
-	#.GitIngnore File
+	#.GitIgnore File
 	Try {
 		write-Status -Message 'Creating .gitignore...' -Type 'Info' -Level 1
 		Copy-Item $script:scriptpath\Config\gitignore.txt "$root\.gitignore" -ErrorAction Stop

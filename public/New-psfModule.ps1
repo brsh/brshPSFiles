@@ -15,7 +15,7 @@ function New-psfModule {
 		* Root/*.psm1 - the main module file
 		* Root/*.psd1 - the Module Definition file
 		* Root/readme.md - the base readme markdown file
-		* Root/licenst.txt - the license file (if any; default is MIT)
+		* Root/license.txt - the license file (if any; default is MIT)
 		* Root/.gitignore - win/mac/msoffice/etc files/folders for git to ignore by default
 		* Root/Public/Information.ps1 - the Get-Help function
 		* Root/Private/Write-Status.ps1 - a Write-Host wrapper
@@ -75,7 +75,7 @@ function New-psfModule {
 		[Parameter(Mandatory = $false)]
 		[switch] $GitInit = $false,
 		[Parameter(Mandatory = $false)]
-		[ValidateSet('2', '3', '5.1', '6')]
+		[ValidateSet('2.0', '3.0', '4.0', '5.1', '6.0')]
 		[string] $MinimumVersion = "5.1"
 	)
 
@@ -113,7 +113,7 @@ function New-psfModule {
 	Try {
 		write-Status -Message 'Creating Module File...' -Type 'Info' -Level 0
 		(Get-PSMModule -Name $Name -Description $Description) | Out-File -FilePath "$Path\$Name\$Name.psm1" -Encoding utf8 -NoClobber -ErrorAction Stop
-		write-Status -Message 'Sucess' -Type 'Good' -Level 1
+		write-Status -Message 'Success' -Type 'Good' -Level 1
 	} Catch {
 		Write-Status -Message "Could not create the Module file." -Type "Error" -Level 1 -e $_
 		return
@@ -123,7 +123,7 @@ function New-psfModule {
 	Try {
 		write-Status -Message 'Creating Readme File...' -Type 'Info' -Level 0
 		(Get-PSMReadme -Name $Name -Description $Description) | Out-File -FilePath "$Path\$Name\readme.md" -Encoding utf8 -NoClobber -ErrorAction Stop
-		write-Status -Message 'Sucess' -Type 'Good' -Level 1
+		write-Status -Message 'Success' -Type 'Good' -Level 1
 	} Catch {
 		Write-Status -Message "Could not create the Readme file." -Type "Error" -Level 1 -e $_
 		return

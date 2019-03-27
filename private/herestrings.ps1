@@ -20,7 +20,7 @@ Function Get-$(${NickName})Help {
 	Write-Host "Getting available functions..." -ForegroundColor Yellow
 
 	`$all = @()
-	`$list = Get-Command -Type function -Module `"$($Name)`" | Where-Object { `$_.Name -in `$script:showhelp}
+	`$list = Get-Command -Type function -Module `"$($Name)`" | Where-Object { `$_.Name -in `$script:ShowHelp}
 	`$list | ForEach-Object {
         if (`$PSVersionTable.PSVersion.Major -lt 6) {
 			`$RetHelp = Get-Help `$_.Name -ShowWindow:`$false -ErrorAction SilentlyContinue
@@ -53,8 +53,8 @@ param (
 )
 #region Default Private Variables
 # Current script path
-[string] `$script:ScriptPath = Split-Path (get-variable myinvocation -scope script).value.Mycommand.Definition -Parent
-[string[]] `$script:showhelp = @()
+[string] `$script:ScriptPath = Split-Path (Get-Variable MyInvocation -scope script).value.MyCommand.Definition -Parent
+[string[]] `$script:ShowHelp = @()
 #endregion Default Private Variables
 
 #region Load Private Helpers
@@ -71,10 +71,10 @@ Get-ChildItem `$ScriptPath/public -Recurse -Filter "*.ps1" -File | ForEach-Objec
 
 	# From https://www.the-little-things.net/blog/2015/10/03/powershell-thoughts-on-module-design/
 	# Find all the functions defined no deeper than the first level deep and export it.
-	# This looks ugly but allows us to not keep any uneeded variables from poluting the module.
-	([System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Path `$_.FullName -Raw), [ref] `$null, [ref] `$null)).FindAll( { `$args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, `$false) | Foreach {
+	# This looks ugly but allows us to not keep any unneeded variables from polluting the module.
+	([System.Management.Automation.Language.Parser]::ParseInput((Get-Content -Path `$_.FullName -Raw), [ref] `$null, [ref] `$null)).FindAll( { `$args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, `$false) | ForEach-Object {
 		Export-ModuleMember `$_.Name
-		`$showhelp += `$_.Name
+		`$ShowHelp += `$_.Name
 	}
 }
 #endregion Load Public Helpers
