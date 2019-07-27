@@ -63,7 +63,7 @@ New-psfScript -Name "Brontosaurus.ps1" -Path "C:\Scripts" -Synopsis 'A script ab
 		[string]$Author,
 		[switch] $NewFolder = $false,
 		[Parameter(Mandatory = $false)]
-		[ValidateSet('Apache2', 'GNUv3', 'MIT', 'PublicDomain')]
+		[ValidateSet('Apache2', 'GNUv3', 'MIT', 'PublicDomain', 'WTFPL')]
 		[string] $License = 'MIT',
 		[Parameter(Mandatory = $false)]
 		[switch] $GitInit = $false,

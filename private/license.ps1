@@ -24,6 +24,10 @@ function Get-LicenseText {
 			"Copyright (c) $((Get-Date).ToString('yyyy')) by $Author, under the MIT license."
 			break
 		}
+		'WTFPL' {
+			"Copyright (c) $((Get-Date).ToString('yyyy')) by $Author. This work is free. You can redistribute it and/or modify it under the terms of the Do What The Fuck You Want To Public License, Version 2, as published by Sam Hocevar. See http://www.wtfpl.net/ for more details."
+			break
+		}
 		DEFAULT { 'To the extent within my power and possible under law, the author(s) have dedicated all copyright and related and neighboring rights to the public domain worldwide. This is distributed without any warranty.'; break }
 	}
 }
@@ -54,7 +58,11 @@ function Set-LicenseFile {
 					$FileCreated = $true
 					break
 				}
-
+				'WTFPL' {
+					Copy-Item $script:scriptpath\config\wtfpl.txt $root\license.txt
+					$FileCreated = $true
+					break
+				}
 				DEFAULT {
 					Write-Status -Message 'No License specified - defaulting to Public Domain' -Type 'Warning' -Level 1
 					$FileCreated = $false

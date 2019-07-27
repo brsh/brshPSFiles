@@ -70,7 +70,7 @@ function New-psfModule {
 		[Parameter(Mandatory = $false)]
 		[switch] $Abbreviate = $false,
 		[Parameter(Mandatory = $false)]
-		[ValidateSet('Apache2', 'GNUv3', 'MIT', 'PublicDomain')]
+		[ValidateSet('Apache2', 'GNUv3', 'MIT', 'PublicDomain', 'WTFPL')]
 		[string] $License = 'MIT',
 		[Parameter(Mandatory = $false)]
 		[switch] $GitInit = $false,
