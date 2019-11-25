@@ -4,6 +4,7 @@
 #region Default Private Variables
 # Current script path
 [string] $script:ScriptPath = Split-Path (Get-Variable MyInvocation -Scope script).value.MyCommand.Definition -Parent
+if ((Get-Variable MyInvocation -Scope script).Value.Line.Trim().Length -eq 0) { $Quiet = $true }
 [string[]] $script:ShowHelp = @()
 #endregion Default Private Variables
 
