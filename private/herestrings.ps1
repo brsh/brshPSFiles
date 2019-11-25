@@ -54,7 +54,7 @@ param (
 #region Default Private Variables
 # Current script path
 [string] `$script:ScriptPath = Split-Path (Get-Variable MyInvocation -scope script).value.MyCommand.Definition -Parent
-if (`$Null -ne (Get-Variable MyInvocation -Scope script).Value.Line) { `$Quiet = `$true }
+if ((Get-Variable MyInvocation -Scope script).Value.Line.Trim().Length -eq 0) { `$Quiet = `$true }
 [string[]] `$script:ShowHelp = @()
 # if (`$PSVersionTable.PSVersion.Major -lt 6) {
 # 	[bool] `$IsLinux = `$false
