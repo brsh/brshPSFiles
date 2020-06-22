@@ -1,161 +1,117 @@
-function Get-Indent {
-	param (
-		[int] $Level,
-		[string] $Char = '  '
-	)
-	($Char * $Level)
-}
+function Write-brshEventLog {
+	<#
+	.SYNOPSIS
+	Basic 'Write to the EventLog' function
 
-function Write-Status {
+	.DESCRIPTION
+	Everything needs to log something sometime, right? Well, that's what this is for.
+	Basically, I extended the Write-Status function to _also_ write an event to the
+	EventLog - just supply an EventID to Write-Status, and the message will both
+	write to screen with color and indenting, and write to the EventLog ... with ...
+	well ... line breaks.
+
+	.PARAMETER Message
+	The message - same as Write-Status takes
+
+	.PARAMETER Source
+	The "source" for the event - by default, the Module name
+
+	.PARAMETER ID
+	An ID number to differentiate various events
+
+	.PARAMETER Type
+	The type of event - Information, Warning, or Error
+
+	.PARAMETER e
+	An exception object - very simple to pass thru via $_ in a Try/Catch
+
+	.EXAMPLE
+	Write-brshEventLog -Message 'This is my entry on brontosauruses.' -EventID 10 -Type 'Information' -Source 'The SuperWhamoDyne App'
+	#>
+	[cmdletbinding()]
 	param (
-		[Parameter(Position = 0)]
-		[Alias('Text', 'Subject')]
-		[string[]] $Message,
-		[Parameter(Position = 1)]
-		[string[]] $Type,
-		[Parameter(Position = 2)]
-		[int] $Level = 0,
+		[string[]] $Message = 'Default Message',
+		[string] $Source = $script:AppName,
+		[int] $ID = 9999,
+		[ValidateSet('Information', 'Warning', 'Error')]
+		[string] $Type = 'Information',
 		[Parameter(Position = 3)]
-		[System.Management.Automation.ErrorRecord] $e,
-		[int] $EventID = -1
+		[System.Management.Automation.ErrorRecord] $e
 	)
-	[string] $LogType = 'Information'
 
-	[System.ConsoleColor] $ColorInfo = [ConsoleColor]::White
-	[System.ConsoleColor] $ColorGood = [ConsoleColor]::Green
-	[System.ConsoleColor] $ColorError = [ConsoleColor]::Red
-	[System.ConsoleColor] $ColorWarning = [ConsoleColor]::Yellow
-	[System.ConsoleColor] $ColorDebug = [ConsoleColor]::Cyan
-
-	[System.ConsoleColor] $FGColor = $ColorInfo
-	[System.ConsoleColor] $DefaultBGColor = $Host.UI.RawUI.BackgroundColor
-	[System.ConsoleColor] $BGColor = $DefaultBGColor
-
-	[System.ConsoleColor] $ColorHighlight = [ConsoleColor]::DarkGray
-
-	if ($BGColor -eq $ColorHighlight) {
-		[System.ConsoleColor] $ColorHighlight = [ConsoleColor]::DarkMagenta
+	$EventType = Switch ($Type) {
+		'Error' { 'Error' }
+		'Warning' { 'Warning' }
+		Default { 'Information' }
 	}
 
-	[string] $Space = Get-Indent -Level $Level
+	if (New-brshEventLog -EventLog Application -AppName $Source) {
+		try {
+			[string] $Formatted = $Message -join "`r`n"
+			if ($null -ne $e) {
+				$Formatted += "`r`n`r`n$($e.InvocationInfo.PositionMessage -split "`n")"
+				$Formatted += "`r`n`r`nError message was: $($e.Exception.Message)"
 
-	if ($Message) {
-		:parent foreach ($txt in $Message) {
-			$BGColor = $DefaultBGColor
-			[int] $index = [array]::indexof($Message, $txt)
-			Switch -regex ($Type[$index]) {
-				'^G' {
-					$FGColor = $ColorGood
-					$LogType = "Information"
-					break
-				}
-				'^E' {
-					$FGColor = $ColorError
-					$LogType = "Error"
-					break
-				}
-				'^W' {
-					$FGColor = $ColorWarning
-					$LogType = "Warning"
-					break
-				}
-				'^D' {
-					$FGColor = $ColorDebug
-					$LogType = "Information"
-					$EventLog = $false
-					break
-				}
-				'^S' {
-					break parent
-				}
-				DEFAULT {
-					$FGColor = $ColorInfo
-					$LogType = "Information"
-					break
-				}
 			}
-			if ($index -ge 0) {
-				$space = ' '
-			}
-			Write-Host $Space  -ForegroundColor $FGColor -BackgroundColor $BGColor -NoNewline
-			if ($Type[$index] -match 'High$') { $BGColor = $ColorHighlight }
-			Write-Host $txt -ForegroundColor $FGColor -BackgroundColor $BGColor -NoNewline
+			Write-EventLog -LogName "Application" -Source $Source -EventID $ID -EntryType $EventType -Message $Formatted -ErrorAction Stop
+		} catch {
+			Write-Status -Message 'Could not write to the EventLog - error writing event' -Type Error -Level 0 -e $_
+			Write-Status -Message "Message was:", $Message -Type Warning, Info -Level 1
 		}
-		write-host ''
-	}
-
-	if ($e) {
-		$Level += 1
-		$space = Get-Indent -Level $Level
-
-		[string[]] $wrapped = Set-WordWrap -Message $($e.InvocationInfo.PositionMessage -split "`n") -Level $Level
-		$wrapped | ForEach-Object {
-			if ($_ -notmatch '^\+ \~') {
-				Write-Status -Message $_ -Type 'Warning' -Level $Level
-			}
-		}
-
-		$wrapped = Set-WordWrap -Message $e.Exception.Message -Level $Level
-		$wrapped | ForEach-Object {
-			Write-Status -Message $_ -Type 'Error' -Level $Level
-		}
-	}
-	if ($EventID -ge 0) {
-		Write-brshEventLog -Type $LogType -Message $Message -e $e -ID $EventID
 	}
 }
 
-<#
-.SYNOPSIS
-wraps a string or an array of strings at the console width without breaking within a word
-.PARAMETER chunk
-a string or an array of strings
-.EXAMPLE
-word-wrap -chunk $string
-.EXAMPLE
-$string | word-wrap
-#>
-function Set-WordWrap {
-	[CmdletBinding()]
-	Param(
-		[string[]] $Message,
-		[int] $Level = 0
+function New-brshEventLog {
+	<#
+	.SYNOPSIS
+	Registers a new EventLog and source
+	.DESCRIPTION
+	All events need logs, and all logs need sources. This obfuscates the donut making.
+	You must register a source with a log before you can write to that log.
+	.PARAMETER AppName
+	The name of the source (generally the app or script calling it)
+	.PARAMETER EventLog
+	The event log - 'Application', 'System', or one of your own choosing
+	.EXAMPLE
+	New-brshEventLog -AppName 'MyApp' -EventLog 'Application'
+	#>
+	[cmdletbinding()]
+	param (
+		[string] $AppName = '',
+		[string] $EventLog = 'Application'
+
 	)
-
-	BEGIN {
-		[string] $Space = Get-Indent -Level $Level
-		$Lines = @()
-	}
-
-	PROCESS {
-		foreach ($line in $Message) {
-			$words = ''
-			$count = 0
-			$line -split '\s+' | ForEach-Object {
-				$count += $_.Length + 1
-				if ($count -gt ($Host.UI.RawUI.WindowSize.Width - $Space.Length - 6)) {
-					$Lines += , $words.trim()
-					$words = ''
-					$count = $_.Length + 1
-				}
-				$words = "$words$_ "
-			}
-			$Lines += , $words.trim()
+	[bool] $Found = $false
+	if ($AppName.Trim().Length -gt 0) {
+		try {
+			$Found = [System.Diagnostics.EventLog]::SourceExists($AppName)
+		} catch {
+			$Found = $false
 		}
-		# $Lines
-	}
-
-	END {
-		$Lines
+		if (-not $Found) {
+			try {
+				Write-Status "Registering new Source ($AppName) in EventLog ($EventLog)" -Level 0 -Type Info
+				New-EventLog -LogName $EventLog -Source $AppName -ErrorAction Stop
+				$True
+			} catch [System.InvalidOperationException] {
+				$True
+			} catch {
+				Write-Status -Message 'Could not write to the EventLog - error registering Log Source' -Type Error -Level 1 -e $_
+				$False
+			}
+		} else {
+			$true
+		}
+	} else {
+		$False
 	}
 }
-
 
 # SIG # Begin signature block
 # MIIapgYJKoZIhvcNAQcCoIIalzCCGpMCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUwg2BDBcjdVJxh1XkeeY8pMZV
-# XxmgghX4MIID7jCCA1egAwIBAgIQfpPr+3zGTlnqS5p31Ab8OzANBgkqhkiG9w0B
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUQko722OP+e4WreSMc30Vqdnw
+# Z7WgghX4MIID7jCCA1egAwIBAgIQfpPr+3zGTlnqS5p31Ab8OzANBgkqhkiG9w0B
 # AQUFADCBizELMAkGA1UEBhMCWkExFTATBgNVBAgTDFdlc3Rlcm4gQ2FwZTEUMBIG
 # A1UEBxMLRHVyYmFudmlsbGUxDzANBgNVBAoTBlRoYXd0ZTEdMBsGA1UECxMUVGhh
 # d3RlIENlcnRpZmljYXRpb24xHzAdBgNVBAMTFlRoYXd0ZSBUaW1lc3RhbXBpbmcg
@@ -277,22 +233,22 @@ function Set-WordWrap {
 # cm9kIElzc3VpbmcgQ0ECEycAAAAO8NgHoJNHr7gAAAAAAA4wCQYFKw4DAhoFAKB4
 # MBgGCisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQB
 # gjcCAQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkE
-# MRYEFHZR5R6/k5R1VIuhuV6V65MRqBxaMA0GCSqGSIb3DQEBAQUABIIBAExtWquG
-# JnfkKQiqV31WSvyVQOQGW2hBMPOJve7sK7zDvfmfaYxc1Py/aeQWIa6S+0eIjA1N
-# M3HZ3Cw5V9+eHE1KP2rTi0BEPTiLeVV1F78gDpT27hkRq+HlQv9QnW5mG8lKcUQ6
-# RVZVP0BDlXaJbE8DPf8m7Wr/dr5Ol4Ecmj8/J3wPlrAeCGwjjFHTcSHUAqHi/Y3e
-# fIV7HSobGmFOfpwk3K+LR2q9w1iQOlWdVUGrQd5RloNKciBIyt/dNMx4mRKZwTlY
-# LQNad9ZL9zDG6WNCzMqtfTxrgWbU6E6lgbwxOIh6+3rCZafAk3qTJE4lDU1J9iQ8
-# x1dDOW39puptJ0uhggILMIICBwYJKoZIhvcNAQkGMYIB+DCCAfQCAQEwcjBeMQsw
+# MRYEFHdXRvRI8XP84DW7zU6xJ8kE8VR8MA0GCSqGSIb3DQEBAQUABIIBAMEptOnp
+# gjGxzZB45vWqHjcPXq+Sb+0dC/XICsO35jBrXQqBztOFKhnN/LCjMZByypvKr/Ki
+# jd4NjzfoIAoSdz4XLbSWH5tHv06ciDE3ZEbHJS6J0Sx8PXVRBHyRRprHon1CyH4s
+# SlSBuIlMHIepeQTa+t13sZSEDctqG/wNL59Xh3w39HrJ7t9wBrnK3yg90qmZPSw6
+# RQVBK6OTixu70aX8qR+3hl5stDMro+l9p4/AzbJx6yMlateEf/J4KBQtAgRTqyO1
+# QrimOQTmuoRKLm+upJQwJ3MujPX9tv2dOpXVqcuRgWnGRAtP4gdlMIUqaf5VD7S2
+# k0a0QYXy+Y9tmCuhggILMIICBwYJKoZIhvcNAQkGMYIB+DCCAfQCAQEwcjBeMQsw
 # CQYDVQQGEwJVUzEdMBsGA1UEChMUU3ltYW50ZWMgQ29ycG9yYXRpb24xMDAuBgNV
 # BAMTJ1N5bWFudGVjIFRpbWUgU3RhbXBpbmcgU2VydmljZXMgQ0EgLSBHMgIQDs/0
 # OMj+vzVuBNhqmBsaUDAJBgUrDgMCGgUAoF0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3
 # DQEHATAcBgkqhkiG9w0BCQUxDxcNMjAwNjE4MTk0NTUwWjAjBgkqhkiG9w0BCQQx
-# FgQUCoOOTAls62hePsXrGM3hngoGQeEwDQYJKoZIhvcNAQEBBQAEggEAUybWcOal
-# qPOTc83QG+k9Fa5k8HHRDOy7qA7Cmuujq/BucQwlPyt1wVOcOahZePVqgvWvC/y3
-# QOkgqFrvVGf8EJZOB9zR4Ykks581NLwNtxgyByKhc7uZxk0IxUCHPJ3l6SOUz+xq
-# U+zGV6QXsm+QjyO5ANqC6AdpDi0cg4hp9Wd/6tnHiK8oV1k9/xwVhphjSx6+2Esw
-# I4VWuPjb5gNB1p7GiGDQhRl8qM6WQdSLp7W9+rEfa78Kl+fwyI34jobGr7vm3fVb
-# wokYSiLGkhlmIB/4ZCU1eb1o+CdmrbfGtwye16+bFrez05ioVBcgTPBeGOlMFmyt
-# lBFmCHBuHNyjHA==
+# FgQUw5F7cdwMiGA3ahUilhCPQH194AYwDQYJKoZIhvcNAQEBBQAEggEASKYuTmAc
+# KAuYavgVlKQucFLB+y1vIwmX6pyiiQtekXKBN5vsDmiUsCXALbAqwq7E6KV3OZ8S
+# 5nLKGG4CZzV4CTwZJhD595QrKWdwsdWorvEZ9kIT7AvP/rhxWz0LVisfx1rl46oC
+# O2KGXm1ixWuIL6cezfz9r/u0qlo8JYCmsxHPhOQOIW6Sxa7T5GqPX8QW6Od8tr0g
+# kHxioikQo0kGIsgtC/zfDovCWBJQb35umnUhUXZfyWccEI6z6sG8h7/nrLA8ZxRM
+# vMeYNm2Nqt9A0MXMc3qShALFOkzLFTGaN5IEvCIbpaxfw688obQh2G10T4002hvr
+# uXivh6P2HdcT5Q==
 # SIG # End signature block
